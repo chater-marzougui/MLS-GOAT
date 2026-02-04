@@ -1,0 +1,73 @@
+@import 'tailwindcss';
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
+:root {
+  --radius: 0.625rem;
+
+  /* GOAT Brand Colors */
+  --electric-cyan: #11C5E8;
+  --neon-magenta: #8B39BA;
+  --deep-space: #000625;
+  --neural-navy: #102433;
+  --stark-white: #E0E1E5;
+
+  /* Semantic mappings */
+  --background: var(--deep-space);
+  --foreground: var(--stark-white);
+  --card: var(--neural-navy);
+  --card-foreground: var(--stark-white);
+  --popover: var(--neural-navy);
+  --popover-foreground: var(--stark-white);
+  --primary: var(--electric-cyan);
+  --primary-foreground: var(--deep-space);
+  --secondary: var(--neural-navy);
+  --secondary-foreground: var(--stark-white);
+  --muted: #6B7280;
+  --muted-foreground: #9CA3AF;
+  --accent: var(--neon-magenta);
+  --accent-foreground: var(--stark-white);
+  --destructive: #EF4444;
+  --border: rgba(17, 197, 232, 0.2);
+  --input: rgba(17, 197, 232, 0.1);
+  --ring: var(--electric-cyan);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
