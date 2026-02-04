@@ -17,7 +17,7 @@ def setup_test_data():
     print("Generating Test Data...")
     
     # 1. Ground Truth for Task 1 (Needed on Server)
-    gt_dir = r"C:\Users\chate\Desktop\MLS-GOAT\data\gt_task1"
+    gt_dir = "./data/gt_task1"
     os.makedirs(gt_dir, exist_ok=True)
     
     # Create 5 random tensors

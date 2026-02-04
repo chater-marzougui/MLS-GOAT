@@ -28,7 +28,7 @@ app.include_router(qa.router)
 @app.on_event("startup")
 async def startup_event():
     os.makedirs("temp", exist_ok=True)
-    gt_path = r"C:\Users\chate\Desktop\MLS-GOAT\data\gt_task1"
+    gt_path = "./data/gt_task1"
     if not os.path.exists(gt_path):
         print(f"WARNING: Ground Truth directory not found at {gt_path}. Task 1 scoring will fail.")
         os.makedirs(gt_path, exist_ok=True) 

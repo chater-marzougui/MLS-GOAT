@@ -12,7 +12,7 @@ from ..scoring import scorer
 router = APIRouter(prefix="/submit", tags=["submission"])
 
 # CONFIG (Should be in env)
-GT_TASK1_DIR = r"C:\Users\chate\Desktop\MLS-GOAT\data\gt_task1"
+GT_TASK1_DIR = "./data/gt_task1"
 # Ensure the scorer knows about GT
 scorer.gt_dir_task1 = GT_TASK1_DIR
 
