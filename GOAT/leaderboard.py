@@ -1,7 +1,7 @@
 import requests
 import pandas as pd
 
-API_URL = "http://localhost:8000"
+API_URL = "https://framing-innocent-ira-ends.trycloudflare.com"
 
 def _print_leaderboard(data, title):
     print(f"\n=== {title} ===")

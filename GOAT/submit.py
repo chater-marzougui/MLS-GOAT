@@ -3,7 +3,7 @@ import os
 import zipfile
 import shutil
 
-API_URL = "http://localhost:8000"
+API_URL = "https://framing-innocent-ira-ends.trycloudflare.com"
 
 def _login(team_id, password):
     # team_id in prompt is likely the name? "teamID" string.
