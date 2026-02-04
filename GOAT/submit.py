@@ -26,27 +26,19 @@ def challenge1(folder_path, team_id, password):
 
     pattern = re.compile(r"^part1_(\d{6})\.pt$")
     matched_files = {}
-    bad_files = []
 
     for f in os.listdir(folder_path):
         m = pattern.match(f)
         if not m:
-            bad_files.append(f)
             continue
 
         idx = int(m.group(1))
         if idx not in EXPECTED_RANGE_ONE:
-            bad_files.append(f)
             continue
 
         matched_files[idx] = f
 
     missing = sorted(EXPECTED_RANGE_ONE - matched_files.keys())
-
-    if bad_files:
-        raise ValueError(
-            f"Invalid filenames detected:\n" + "\n".join(sorted(bad_files))
-        )
 
     if missing:
         raise ValueError(
