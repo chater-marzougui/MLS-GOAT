@@ -16,7 +16,6 @@ def _login(team_id, password):
     return response.json()["access_token"]
 
 
-
 def challenge1(folder_path, team_id, password):
     print(f"Submitting Task 1 for team {team_id}...")
 
@@ -26,19 +25,27 @@ def challenge1(folder_path, team_id, password):
 
     pattern = re.compile(r"^part1_(\d{6})\.pt$")
     matched_files = {}
+    bad_files = []
 
     for f in os.listdir(folder_path):
         m = pattern.match(f)
         if not m:
+            bad_files.append(f)
             continue
 
         idx = int(m.group(1))
         if idx not in EXPECTED_RANGE_ONE:
+            bad_files.append(f)
             continue
 
         matched_files[idx] = f
 
     missing = sorted(EXPECTED_RANGE_ONE - matched_files.keys())
+
+    if bad_files:
+        raise ValueError(
+            f"Invalid filenames detected:\n" + "\n".join(sorted(bad_files))
+        )
 
     if missing:
         raise ValueError(
@@ -65,7 +72,7 @@ def challenge1(folder_path, team_id, password):
     zip_filename = f"{team_id}_task1.zip"
     print("Zipping files...")
 
-    with zipfile.ZipFile(zip_filename, "w", zipfile.ZIP_DEFLATED) as zipf:
+    with zipfile.ZipFile(zip_filename, "w", zipfile.ZIP_DEFLATED, compresslevel=4) as zipf:
         for idx in tqdm(sorted(matched_files)):
             f = matched_files[idx]
             path = os.path.join(folder_path, f)
@@ -82,32 +89,43 @@ def challenge1(folder_path, team_id, password):
     # ---------- Upload with progress ----------
     print("Uploading submission...")
 
-    class TqdmFile:
-        def __init__(self, fileobj, total):
-            self.fileobj = fileobj
-            self.pbar = tqdm(total=total, unit="B", unit_scale=True)
+    class ProgressFileWrapper:
+        def __init__(self, filepath, mode='rb'):
+            self.filepath = filepath
+            self.file = open(filepath, mode)
+            self.size = os.path.getsize(filepath)
+            self.pbar = tqdm(total=self.size, unit='B', unit_scale=True, unit_divisor=1024)
+            self.uploaded = 0
 
         def read(self, size=-1):
-            data = self.fileobj.read(size)
-            self.pbar.update(len(data))
-            return data
+            chunk = self.file.read(size)
+            if chunk:
+                self.uploaded += len(chunk)
+                self.pbar.update(len(chunk))
+            return chunk
+
+        def __len__(self):
+            return self.size
 
         def close(self):
             self.pbar.close()
-            self.fileobj.close()
+            self.file.close()
 
-    total_size = os.path.getsize(zip_filename)
     headers = {"Authorization": f"Bearer {token}"}
 
-    with open(zip_filename, "rb") as f:
-        wrapped = TqdmFile(f, total_size)
-        files = {"file": (zip_filename, wrapped, "application/zip")}
+    try:
+        wrapped_file = ProgressFileWrapper(zip_filename)
+        files = {"file": (zip_filename, wrapped_file, "application/zip")}
         resp = requests.post(
             f"{API_URL}/submit/task1",
             headers=headers,
             files=files
         )
-        wrapped.close()
+        wrapped_file.close()
+    except Exception as e:
+        if os.path.exists(zip_filename):
+            os.remove(zip_filename)
+        raise e
 
     # ---------- Cleanup ----------
     if os.path.exists(zip_filename):
@@ -121,6 +139,7 @@ def challenge1(folder_path, team_id, password):
         print(f"❌ Submission Failed: {resp.text}")
         return None
 
+
 def challenge2(model_path, team_id, password):
     print(f"Submitting Task 2 for team {team_id}...")
     
@@ -131,16 +150,46 @@ def challenge2(model_path, team_id, password):
         token = _login(team_id, password)
     except Exception as e:
         raise e
-        
+
+    # ---------- Upload with progress ----------
+    print("Uploading model...")
+
+    class ProgressFileWrapper:
+        def __init__(self, filepath, mode='rb'):
+            self.filepath = filepath
+            self.file = open(filepath, mode)
+            self.size = os.path.getsize(filepath)
+            self.pbar = tqdm(total=self.size, unit='B', unit_scale=True, unit_divisor=1024)
+            self.uploaded = 0
+
+        def read(self, size=-1):
+            chunk = self.file.read(size)
+            if chunk:
+                self.uploaded += len(chunk)
+                self.pbar.update(len(chunk))
+            return chunk
+
+        def __len__(self):
+            return self.size
+
+        def close(self):
+            self.pbar.close()
+            self.file.close()
+
     headers = {"Authorization": f"Bearer {token}"}
-    with open(model_path, 'rb') as f:
-        files = {'file': (os.path.basename(model_path), f, 'application/octet-stream')}
+    
+    try:
+        wrapped_file = ProgressFileWrapper(model_path)
+        files = {'file': (os.path.basename(model_path), wrapped_file, 'application/octet-stream')}
         resp = requests.post(f"{API_URL}/submit/task2", headers=headers, files=files)
+        wrapped_file.close()
+    except Exception as e:
+        raise e
         
     if resp.status_code == 200:
         data = resp.json()
-        print(f"Submission Successful! Score: {data['public_score']}")
+        print(f"✅ Submission Successful! Score: {data['public_score']}")
         return data
     else:
-        print(f"Submission Failed: {resp.text}")
+        print(f"❌ Submission Failed: {resp.text}")
         return None
