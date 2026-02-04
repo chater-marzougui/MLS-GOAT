@@ -4,7 +4,8 @@ sqlalchemy
 python-multipart
 # Assuming torch is already installed with CUDA support as per user context, 
 # but listing it here for completeness.
-# torch 
+torch 
+numpy
 # onnxruntime-gpu
 requests
 tqdm

@@ -31,8 +31,8 @@ const Login: React.FC = () => {
                 {/* Logo Section */}
                 <div className="text-center mb-8">
                     <div className="flex justify-center items-center gap-4 mb-4">
-                        <img src="/src/assets/icons/logo_mls.png" alt="MLS Logo" className="h-16" />
-                        <img src="/src/assets/icons/logo_goat.png" alt="GOAT Logo" className="h-16" />
+                        <img src="/icons/logo_mls.png" alt="MLS Logo" className="h-16" />
+                        <img src="/icons/logo_goat.png" alt="GOAT Logo" className="h-16" />
                     </div>
                     <h1 className="text-3xl font-bold mb-2" style={{ color: 'var(--primary)' }}>
                         GOAT 1.0
