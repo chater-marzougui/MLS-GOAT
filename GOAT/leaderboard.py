@@ -1,7 +1,7 @@
 import requests
 import pandas as pd
 
-API_URL = "https://framing-innocent-ira-ends.trycloudflare.com"
+API_URL = "http://20.49.50.218/api"
 
 def _print_leaderboard(data, title):
     print(f"\n=== {title} ===")

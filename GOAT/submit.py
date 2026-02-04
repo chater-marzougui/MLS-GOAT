@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 EXPECTED_RANGE_ONE = set(range(0, 229))
 
-API_URL = "https://framing-innocent-ira-ends.trycloudflare.com"
+API_URL = "http://20.49.50.218/api"
 
 def _login(team_id, password):
     response = requests.post(f"{API_URL}/auth/login", json={"name": team_id, "password": password})
