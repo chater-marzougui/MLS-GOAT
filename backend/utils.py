@@ -6,8 +6,14 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from . import database, models
+from dotenv import load_dotenv
+import os
 
-SECRET_KEY = "HACKATHON_SECRET_KEY_CHANGE_ME"
+load_dotenv()
+
+SECRET_KEY = os.getenv("HACKATHON_SECRET_KEY")
+if SECRET_KEY is None:
+    raise ValueError("HACKATHON_SECRET_KEY environment variable not set")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7 # 1 week
 

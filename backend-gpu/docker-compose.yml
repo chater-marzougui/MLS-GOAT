@@ -1,0 +1,245 @@
+version: '3.8'
+
+services:
+  # Main backend - handles uploads and job distribution
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - ./data:/app/data
+      - evaluation_queue:/app/queue
+      - evaluation_results:/app/results
+    environment:
+      - REDIS_HOST=redis
+      - WORKER_COUNT=7
+      - DATABASE_URL=sqlite:///./hackathon.db
+    depends_on:
+      - redis
+    networks:
+      - hackathon-net
+    cpus: '1.0'  # Reserve 1 CPU core for main backend
+
+  # Redis for job queue
+  redis:
+    image: redis:7-alpine
+    networks:
+      - hackathon-net
+    volumes:
+      - redis_data:/data
+
+  # Worker instances with GPU partitioning
+  worker-1:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.worker
+    environment:
+      - REDIS_HOST=redis
+      - WORKER_ID=1
+      - GPU_MEMORY_FRACTION=0.143  # ~4GB per worker (28GB / 7)
+      - CUDA_VISIBLE_DEVICES=0
+      - MIG_DEVICE=0
+    volumes:
+      - evaluation_queue:/app/queue
+      - evaluation_results:/app/results
+      - ./data:/app/data
+    depends_on:
+      - redis
+    networks:
+      - hackathon-net
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['0']
+              capabilities: [gpu]
+    restart: unless-stopped
+
+  worker-2:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.worker
+    environment:
+      - REDIS_HOST=redis
+      - WORKER_ID=2
+      - GPU_MEMORY_FRACTION=0.143
+      - CUDA_VISIBLE_DEVICES=0
+      - MIG_DEVICE=0
+    volumes:
+      - evaluation_queue:/app/queue
+      - evaluation_results:/app/results
+      - ./data:/app/data
+    depends_on:
+      - redis
+    networks:
+      - hackathon-net
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['0']
+              capabilities: [gpu]
+    restart: unless-stopped
+
+  worker-3:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.worker
+    environment:
+      - REDIS_HOST=redis
+      - WORKER_ID=3
+      - GPU_MEMORY_FRACTION=0.143
+      - CUDA_VISIBLE_DEVICES=0
+      - MIG_DEVICE=0
+    volumes:
+      - evaluation_queue:/app/queue
+      - evaluation_results:/app/results
+      - ./data:/app/data
+    depends_on:
+      - redis
+    networks:
+      - hackathon-net
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['0']
+              capabilities: [gpu]
+    restart: unless-stopped
+
+  worker-4:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.worker
+    environment:
+      - REDIS_HOST=redis
+      - WORKER_ID=4
+      - GPU_MEMORY_FRACTION=0.143
+      - CUDA_VISIBLE_DEVICES=0
+      - MIG_DEVICE=0
+    volumes:
+      - evaluation_queue:/app/queue
+      - evaluation_results:/app/results
+      - ./data:/app/data
+    depends_on:
+      - redis
+    networks:
+      - hackathon-net
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['0']
+              capabilities: [gpu]
+    restart: unless-stopped
+
+  worker-5:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.worker
+    environment:
+      - REDIS_HOST=redis
+      - WORKER_ID=5
+      - GPU_MEMORY_FRACTION=0.143
+      - CUDA_VISIBLE_DEVICES=0
+      - MIG_DEVICE=0
+    volumes:
+      - evaluation_queue:/app/queue
+      - evaluation_results:/app/results
+      - ./data:/app/data
+    depends_on:
+      - redis
+    networks:
+      - hackathon-net
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['0']
+              capabilities: [gpu]
+    restart: unless-stopped
+
+  worker-6:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.worker
+    environment:
+      - REDIS_HOST=redis
+      - WORKER_ID=6
+      - GPU_MEMORY_FRACTION=0.143
+      - CUDA_VISIBLE_DEVICES=0
+      - MIG_DEVICE=0
+    volumes:
+      - evaluation_queue:/app/queue
+      - evaluation_results:/app/results
+      - ./data:/app/data
+    depends_on:
+      - redis
+    networks:
+      - hackathon-net
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['0']
+              capabilities: [gpu]
+    restart: unless-stopped
+
+  worker-7:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.worker
+    environment:
+      - REDIS_HOST=redis
+      - WORKER_ID=7
+      - GPU_MEMORY_FRACTION=0.143
+      - CUDA_VISIBLE_DEVICES=0
+      - MIG_DEVICE=0
+    volumes:
+      - evaluation_queue:/app/queue
+      - evaluation_results:/app/results
+      - ./data:/app/data
+    depends_on:
+      - redis
+    networks:
+      - hackathon-net
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['0']
+              capabilities: [gpu]
+    restart: unless-stopped
+
+volumes:
+  evaluation_queue:
+  evaluation_results:
+  redis_data:
+
+networks:
+  hackathon-net:
+    driver: bridge

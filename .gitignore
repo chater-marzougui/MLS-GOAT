@@ -3,4 +3,5 @@ data
 *.onnx
 test*
 __pycache__
-create_initial_admin.py
+temp/
+.env
