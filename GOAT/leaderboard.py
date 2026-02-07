@@ -1,7 +1,7 @@
 import requests
 import pandas as pd
 
-API_URL = "https://20.49.50.218/api"
+API_URL = "https://mls-goat.eastus2.cloudapp.azure.com/api"
 
 def _print_leaderboard(data, title):
     print(f"\n=== {title} ===")

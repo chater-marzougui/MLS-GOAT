@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 EXPECTED_RANGE_ONE = set(range(0, 300))  # 0000 to 0299
 
-CPU_API_URL = "https://20.49.50.218/api"
+CPU_API_URL = "https://mls-goat.eastus2.cloudapp.azure.com/api"
 
 def _login(team_id, password):
     """Login to get authentication token"""
