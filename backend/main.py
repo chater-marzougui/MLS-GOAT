@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import os
 from . import models, database
-from .routers import auth, submissions, leaderboard, admin, teams, qa
+from .routers import auth, submissions, leaderboard, admin, teams, qa, gpu_callback
 
 # Create tables
 models.Base.metadata.create_all(bind=database.engine)
@@ -21,6 +21,7 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(teams.router)
 app.include_router(submissions.router)
+app.include_router(gpu_callback.router)
 app.include_router(leaderboard.router)
 app.include_router(admin.router)
 app.include_router(qa.router)

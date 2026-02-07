@@ -7,10 +7,11 @@ from tqdm import tqdm
 
 EXPECTED_RANGE_ONE = set(range(0, 229))
 
-API_URL = "http://20.49.50.218/api"
+CPU_API_URL = "http://20.49.50.218/api"
+GPU_API_URL = "http://GPU_SERVER_IP:8000"
 
 def _login(team_id, password):
-    response = requests.post(f"{API_URL}/auth/login", json={"name": team_id, "password": password})
+    response = requests.post(f"{CPU_API_URL}/auth/login", json={"name": team_id, "password": password})
     if response.status_code != 200:
         raise Exception(f"Login failed: {response.text}")
     return response.json()["access_token"]
@@ -72,7 +73,7 @@ def challenge1(folder_path, team_id, password):
     zip_filename = f"{team_id}_task1.zip"
     print("Zipping files...")
 
-    with zipfile.ZipFile(zip_filename, "w", zipfile.ZIP_DEFLATED, compresslevel=4) as zipf:
+    with zipfile.ZipFile(zip_filename, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as zipf:
         for idx in tqdm(sorted(matched_files)):
             f = matched_files[idx]
             path = os.path.join(folder_path, f)
@@ -117,7 +118,7 @@ def challenge1(folder_path, team_id, password):
         wrapped_file = ProgressFileWrapper(zip_filename)
         files = {"file": (zip_filename, wrapped_file, "application/zip")}
         resp = requests.post(
-            f"{API_URL}/submit/task1",
+            f"{CPU_API_URL}/submit/task1",
             headers=headers,
             files=files
         )
@@ -147,12 +148,18 @@ def challenge2(model_path, team_id, password):
         raise ValueError("Invalid .onnx file")
         
     try:
-        token = _login(team_id, password)
+        response = requests.post(
+            f"{CPU_API_URL}/auth/login",
+            json={"name": team_id, "password": password}
+        )
+        if response.status_code != 200:
+            raise Exception(f"Login failed: {response.text}")
+        token = response.json()["access_token"]
     except Exception as e:
         raise e
 
-    # ---------- Upload with progress ----------
-    print("Uploading model...")
+    # Submit directly to GPU server
+    print("Uploading model to GPU server...")
 
     class ProgressFileWrapper:
         def __init__(self, filepath, mode='rb'):
@@ -175,20 +182,25 @@ def challenge2(model_path, team_id, password):
         def close(self):
             self.pbar.close()
             self.file.close()
-
-    headers = {"Authorization": f"Bearer {token}"}
     
     try:
         wrapped_file = ProgressFileWrapper(model_path)
         files = {'file': (os.path.basename(model_path), wrapped_file, 'application/octet-stream')}
-        resp = requests.post(f"{API_URL}/submit/task2", headers=headers, files=files)
+        data = {'team_token': token, 'batch_size': 8}
+        
+        resp = requests.post(
+            f"{GPU_API_URL}/submit/task2",
+            files=files,
+            data=data
+        )
         wrapped_file.close()
     except Exception as e:
         raise e
         
-    if resp.status_code == 200:
+    if resp.status_code == 202:
         data = resp.json()
-        print(f"✅ Submission Successful! Score: {data['public_score']}")
+        print(f"✅ Submission Queued! Submission ID: {data['submission_id']}")
+        print(f"Queue Position: {data['queue_position']}")
         return data
     else:
         print(f"❌ Submission Failed: {resp.text}")

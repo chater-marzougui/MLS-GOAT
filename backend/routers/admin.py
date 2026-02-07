@@ -169,7 +169,7 @@ def update_leaderboard_settings(
     """Toggle private score visibility (admin only)"""
     settings = db.query(models.LeaderboardSettings).first()
     if not settings:
-        settings = models.LeaderboardSettings(show_private_scores=show_private)
+        settings = models.LeaderboardSettings(show_private_scores=show_private) 
         db.add(settings)
     else:
         settings.show_private_scores = show_private

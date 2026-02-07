@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import Header, APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 from datetime import datetime, date
 import shutil
@@ -13,6 +13,8 @@ router = APIRouter(prefix="/submit", tags=["submission"])
 
 # CONFIG (Should be in env)
 GT_TASK1_DIR = "./data/gt_task1"
+GPU_SCORER_SECRET_KEY = os.getenv('GPU_SCORER_SECRET_KEY')
+
 # Ensure the scorer knows about GT
 scorer.gt_dir_task1 = GT_TASK1_DIR
 
@@ -87,47 +89,30 @@ async def submit_task1(file: UploadFile = File(...), db: Session = Depends(datab
     
     return sub
 
-@router.post("/task2", response_model=schemas.SubmissionResult)
-async def submit_task2(file: UploadFile = File(...), db: Session = Depends(database.get_db), current_team: models.Team = Depends(utils.get_current_team)):
-    # Check limit
+def verify_gpu_secret(x_gpu_secret: str = Header(...)):
+    """Verify the GPU secret key"""
+    if x_gpu_secret != GPU_SCORER_SECRET_KEY:
+        raise HTTPException(status_code=403, detail="Invalid GPU secret key")
+    return True
+
+@router.get("/check-limit/task2/{team_id}")
+def check_task2_limit(
+    team_id: int,
+    db: Session = Depends(database.get_db),
+    _: bool = Depends(verify_gpu_secret)
+):
+    """Check if team has reached submission limit for Task 2"""
     count = db.query(models.Submission).filter(
-        models.Submission.team_id == current_team.id,
+        models.Submission.team_id == team_id,
         models.Submission.task_id == 2
     ).count()
     
     if count >= LIMIT_TASK2:
-        raise HTTPException(status_code=400, detail=f"Submission limit reached for Task 2 ({LIMIT_TASK2})")
+        raise HTTPException(status_code=429, detail=f"Limit reached ({LIMIT_TASK2})")
     
-    if not file.filename.endswith('.onnx'):
-        raise HTTPException(status_code=400, detail="Task 2 requires a .onnx file")
-
-    submission_id = str(uuid.uuid4())
-    temp_dir = os.path.join("temp", submission_id)
-    os.makedirs(temp_dir, exist_ok=True)
-    model_path = os.path.join(temp_dir, file.filename)
-    
-    try:
-        with open(model_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
-            
-        score, details = scorer.evaluate_task2(model_path)
-        
-    except Exception as e:
-        shutil.rmtree(temp_dir, ignore_errors=True)
-        raise HTTPException(status_code=500, detail=f"Evaluation failed: {str(e)}")
-    
-    shutil.rmtree(temp_dir, ignore_errors=True)
-    
-    sub = models.Submission(
-        team_id=current_team.id,
-        task_id=2,
-        filename=file.filename,
-        public_score=score,
-        private_score=score,
-        details=json.dumps(details)
-    )
-    db.add(sub)
-    db.commit()
-    db.refresh(sub)
-    
-    return sub
+    return {
+        "team_id": team_id,
+        "count": count,
+        "limit": LIMIT_TASK2,
+        "remaining": LIMIT_TASK2 - count
+    }
