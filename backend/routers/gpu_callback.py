@@ -6,7 +6,7 @@ from .. import models, database
 import json
 import os
 
-router = APIRouter(prefix="/api/gpu-callback", tags=["gpu-callback"])
+router = APIRouter(prefix="/gpu-callback", tags=["gpu-callback"])
 
 GPU_SCORER_SECRET_KEY = os.getenv('GPU_SCORER_SECRET_KEY')
 

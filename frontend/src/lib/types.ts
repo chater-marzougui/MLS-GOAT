@@ -8,10 +8,10 @@ export interface Submission {
     id: number;
     team_id: number;
     task_id: number;
-    filename: string;
     public_score: number;
     private_score: number;
     timestamp: string;
+    details: string;
 }
 
 export interface LeaderboardEntry {

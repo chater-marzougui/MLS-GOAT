@@ -15,14 +15,20 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ taskId }) => {
         const fetchData = async () => {
             setIsLoading(true);
             try {
+                // Fetch leaderboard settings to check if private scores should be shown
+                const settingsResponse = await leaderboardAPI.getSettings();
+                const privateScoresEnabled = settingsResponse.data.show_private_scores;
+                
                 const response = taskId === 1
                     ? await leaderboardAPI.getTask1()
                     : await leaderboardAPI.getTask2();
                 setData(response.data);
 
-                // Check if private scores are available
-                if (response.data.length > 0 && response.data[0].private_score !== undefined) {
+                // Only show private scores if enabled in settings AND data has private scores
+                if (privateScoresEnabled && response.data.length > 0 && response.data[0].private_score !== undefined) {
                     setShowPrivate(true);
+                } else {
+                    setShowPrivate(false);
                 }
             } catch (error) {
                 console.error('Failed to fetch leaderboard:', error);
@@ -89,11 +95,11 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ taskId }) => {
                                     {entry.team_name}
                                 </td>
                                 <td className="p-4 text-right font-mono" style={{ color: 'var(--primary)' }}>
-                                    {entry.score.toFixed(4)}
+                                    {entry.score.toFixed(8)}
                                 </td>
                                 {showPrivate && (
                                     <td className="p-4 text-right font-mono" style={{ color: 'var(--accent)' }}>
-                                        {entry.private_score?.toFixed(4) || 'N/A'}
+                                        {entry.private_score?.toFixed(8) || 'N/A'}
                                     </td>
                                 )}
                             </tr>

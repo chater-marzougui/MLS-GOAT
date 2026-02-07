@@ -22,6 +22,7 @@ class SubmissionBase(BaseModel):
 class SubmissionResult(SubmissionBase):
     id: int
     team_id: int
+    filename: str
     public_score: float
     private_score: float # Maybe hide this from public view?
     timestamp: datetime

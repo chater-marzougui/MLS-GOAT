@@ -45,8 +45,9 @@ const SubmissionsList: React.FC<SubmissionsListProps> = ({ submissions, fetchSub
                                 <th className="text-left p-4 font-semibold" style={{ color: 'var(--muted-foreground)' }}>ID</th>
                                 <th className="text-left p-4 font-semibold" style={{ color: 'var(--muted-foreground)' }}>Team ID</th>
                                 <th className="text-left p-4 font-semibold" style={{ color: 'var(--muted-foreground)' }}>Challenge</th>
-                                <th className="text-left p-4 font-semibold" style={{ color: 'var(--muted-foreground)' }}>Filename</th>
                                 <th className="text-right p-4 font-semibold" style={{ color: 'var(--muted-foreground)' }}>Public Score</th>
+                                <th className="text-right p-4 font-semibold" style={{ color: 'var(--muted-foreground)' }}>Private Score</th>
+                                <th className="text-left p-4 font-semibold" style={{ color: 'var(--muted-foreground)' }}>Details</th>
                                 <th className="text-left p-4 font-semibold" style={{ color: 'var(--muted-foreground)' }}>Submitted</th>
                                 <th className="text-right p-4 font-semibold" style={{ color: 'var(--muted-foreground)' }}>Actions</th>
                             </tr>
@@ -75,11 +76,14 @@ const SubmissionsList: React.FC<SubmissionsListProps> = ({ submissions, fetchSub
                                             Challenge {sub.task_id}
                                         </span>
                                     </td>
-                                    <td className="p-4 font-mono text-sm" style={{ color: 'var(--foreground)' }}>
-                                        {sub.filename}
-                                    </td>
                                     <td className="p-4 text-right font-mono" style={{ color: 'var(--primary)' }}>
-                                        {sub.public_score.toFixed(4)}
+                                        {sub.public_score.toFixed(8)}
+                                    </td>
+                                    <td className="p-4 text-right font-mono" style={{ color: 'var(--accent)' }}>
+                                        {sub.private_score.toFixed(8)}
+                                    </td>
+                                    <td className="p-4 text-xs max-w-xs truncate" style={{ color: 'var(--muted-foreground)' }} title={sub.details}>
+                                        {sub.details}
                                     </td>
                                     <td className="p-4 text-sm" style={{ color: 'var(--muted-foreground)' }}>
                                         {formatDate(sub.timestamp)}

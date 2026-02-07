@@ -1,16 +1,21 @@
 import React, { useEffect, useState } from 'react';
-import { teamsAPI } from '../lib/api';
+import { teamsAPI, leaderboardAPI } from '../lib/api';
 import type { Submission } from '../lib/types';
 
 const SubmissionHistory: React.FC = () => {
     const [submissions, setSubmissions] = useState<Submission[]>([]);
     const [selectedTask, setSelectedTask] = useState<number | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [showPrivate, setShowPrivate] = useState(false);
 
     useEffect(() => {
         const fetchSubmissions = async () => {
             setIsLoading(true);
             try {
+                // Fetch settings to check if private scores should be shown
+                const settingsResponse = await leaderboardAPI.getSettings();
+                setShowPrivate(settingsResponse.data.show_private_scores);
+                
                 const response = selectedTask
                     ? await teamsAPI.getMySubmissionsByTask(selectedTask)
                     : await teamsAPI.getMySubmissions();
@@ -82,16 +87,18 @@ const SubmissionHistory: React.FC = () => {
                     <thead>
                         <tr className="border-b" style={{ borderColor: 'var(--border)' }}>
                             <th className="text-left p-4 font-semibold" style={{ color: 'var(--muted-foreground)' }}>Challenge</th>
-                            <th className="text-left p-4 font-semibold" style={{ color: 'var(--muted-foreground)' }}>Filename</th>
                             <th className="text-right p-4 font-semibold" style={{ color: 'var(--muted-foreground)' }}>Public Score</th>
-                            <th className="text-right p-4 font-semibold" style={{ color: 'var(--muted-foreground)' }}>Private Score</th>
+                            <th className="text-left p-4 font-semibold" style={{ color: 'var(--muted-foreground)' }}>Details</th>
+                            {showPrivate && (
+                                <th className="text-right p-4 font-semibold" style={{ color: 'var(--muted-foreground)' }}>Private Score</th>
+                            )}
                             <th className="text-left p-4 font-semibold" style={{ color: 'var(--muted-foreground)' }}>Submitted</th>
                         </tr>
                     </thead>
                     <tbody>
                         {submissions.length === 0 ? (
                             <tr>
-                                <td colSpan={5} className="text-center p-8" style={{ color: 'var(--muted-foreground)' }}>
+                                <td colSpan={showPrivate ? 5 : 4} className="text-center p-8" style={{ color: 'var(--muted-foreground)' }}>
                                     No submissions yet
                                 </td>
                             </tr>
@@ -113,15 +120,17 @@ const SubmissionHistory: React.FC = () => {
                                             Challenge {sub.task_id}
                                         </span>
                                     </td>
-                                    <td className="p-4 font-mono text-sm" style={{ color: 'var(--foreground)' }}>
-                                        {sub.filename}
-                                    </td>
                                     <td className="p-4 text-right font-mono" style={{ color: 'var(--primary)' }}>
-                                        {sub.public_score.toFixed(4)}
+                                        {sub.public_score.toFixed(8)}
                                     </td>
-                                    <td className="p-4 text-right font-mono" style={{ color: 'var(--accent)' }}>
-                                        {sub.private_score.toFixed(4)}
+                                    <td className="p-4 text-xs max-w-xs truncate" style={{ color: 'var(--muted-foreground)' }} title={sub.details}>
+                                        {sub.details}
                                     </td>
+                                    {showPrivate && (
+                                        <td className="p-4 text-right font-mono" style={{ color: 'var(--accent)' }}>
+                                            {sub.private_score.toFixed(8)}
+                                        </td>
+                                    )}
                                     <td className="p-4 text-sm" style={{ color: 'var(--muted-foreground)' }}>
                                         {formatDate(sub.timestamp)}
                                     </td>

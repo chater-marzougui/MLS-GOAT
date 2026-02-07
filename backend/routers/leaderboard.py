@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from typing import List, Optional
-from .. import models, schemas, database
+from .. import models, schemas, database, utils
 
 router = APIRouter(prefix="/leaderboard", tags=["leaderboard"])
 
@@ -89,18 +89,24 @@ def get_leaderboard_data(db: Session, task_id: int, team_name: Optional[str] = N
 @router.get("/task1", response_model=List[schemas.LeaderboardEntry])
 def leaderboard_task1(
     team_name: Optional[str] = Query(None, description="Optional team name to include in results if not in top 10"),
-    db: Session = Depends(database.get_db)
+    db: Session = Depends(database.get_db),
+    current_team: models.Team = Depends(utils.get_current_team)
 ):
     settings = get_leaderboard_settings(db)
-    return get_leaderboard_data(db, 1, team_name=team_name, show_private=settings.show_private_scores)
+    # Only show private scores if settings allow it AND user is admin
+    show_private = settings.show_private_scores and current_team.is_admin
+    return get_leaderboard_data(db, 1, team_name=team_name, show_private=show_private)
 
 @router.get("/task2", response_model=List[schemas.LeaderboardEntry])
 def leaderboard_task2(
     team_name: Optional[str] = Query(None, description="Optional team name to include in results if not in top 10"),
-    db: Session = Depends(database.get_db)
+    db: Session = Depends(database.get_db),
+    current_team: models.Team = Depends(utils.get_current_team)
 ):
     settings = get_leaderboard_settings(db)
-    return get_leaderboard_data(db, 2, team_name=team_name, show_private=settings.show_private_scores)
+    # Only show private scores if settings allow it AND user is admin
+    show_private = settings.show_private_scores and current_team.is_admin
+    return get_leaderboard_data(db, 2, team_name=team_name, show_private=show_private)
 
 @router.get("/settings", response_model=schemas.LeaderboardSettings)
 def get_settings(db: Session = Depends(database.get_db)):
