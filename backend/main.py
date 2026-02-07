@@ -8,6 +8,7 @@ from .routers import auth, submissions, leaderboard, admin, teams, qa, gpu_callb
 models.Base.metadata.create_all(bind=database.engine)
 
 app = FastAPI(title="MLS-GOAT Hackathon Backend")
+gpu_server_ip = "https://revolution-imports-thereof-accountability.trycloudflare.com"
 
 # CORS
 app.add_middleware(
@@ -33,6 +34,17 @@ async def startup_event():
     if not os.path.exists(gt_path):
         print(f"WARNING: Ground Truth directory not found at {gt_path}. Task 1 scoring will fail.")
         os.makedirs(gt_path, exist_ok=True) 
+
+@app.get("/gpu-server-ip")
+def get_gpu_server_ip():
+    global gpu_server_ip
+    return {"gpu_server_ip": gpu_server_ip}
+
+@app.post("/gpu-server-ip")
+def set_gpu_server_ip(ip: str):
+    global gpu_server_ip
+    gpu_server_ip = ip
+    return {"message": f"GPU server IP updated to {gpu_server_ip}"}
 
 @app.get("/")
 def read_root():

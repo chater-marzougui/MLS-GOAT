@@ -8,7 +8,6 @@ from tqdm import tqdm
 EXPECTED_RANGE_ONE = set(range(0, 229))
 
 CPU_API_URL = "http://20.49.50.218/api"
-GPU_API_URL = "http://GPU_SERVER_IP:8000"
 
 def _login(team_id, password):
     response = requests.post(f"{CPU_API_URL}/auth/login", json={"name": team_id, "password": password})
@@ -155,6 +154,14 @@ def challenge2(model_path, team_id, password):
         if response.status_code != 200:
             raise Exception(f"Login failed: {response.text}")
         token = response.json()["access_token"]
+    except Exception as e:
+        raise e
+    
+    try:
+        response = requests.get(f"{CPU_API_URL}/gpu-server-ip")
+        if response.status_code != 200:
+            raise Exception(f"Failed to get GPU server IP: {response.text}")
+        GPU_API_URL = response.json()["gpu_server_ip"]
     except Exception as e:
         raise e
 
