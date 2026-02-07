@@ -5,7 +5,7 @@ import re
 import torch
 from tqdm import tqdm
 
-EXPECTED_RANGE_ONE = set(range(0, 229))
+EXPECTED_RANGE_ONE = set(range(0, 300))  # 0000 to 0299
 
 CPU_API_URL = "http://20.49.50.218/api"
 
@@ -23,7 +23,7 @@ def challenge1(folder_path, team_id, password):
     if not os.path.isdir(folder_path):
         raise ValueError("Invalid folder path")
 
-    pattern = re.compile(r"^part1_(\d{6})\.pt$")
+    pattern = re.compile(r"^sample_(\d{4})\.pt$")
     matched_files = {}
     bad_files = []
 

@@ -48,13 +48,6 @@ async def submit_task1(file: UploadFile = File(...), db: Session = Depends(datab
             
         with zipfile.ZipFile(zip_path, 'r') as zip_ref:
             zip_ref.extractall(temp_dir)
-            
-        # Call Scorer
-        # Scorer expects a directory containing .pt files
-        # We need to find where they are (could be in a subfolder in the zip)
-        # Simple walk to find first folder with .pt files?
-        # Or assume flat? Prompt says "one folder of images we zip it". 
-        # Usually it unzips to a folder.
         
         target_dir = temp_dir
         # simple heuristic: if temp_dir contains only one folder, enter it
@@ -64,8 +57,11 @@ async def submit_task1(file: UploadFile = File(...), db: Session = Depends(datab
         
         if len(items) == 1 and os.path.isdir(os.path.join(temp_dir, items[0])):
             target_dir = os.path.join(temp_dir, items[0])
-            
-        score, details = scorer.evaluate_task1(target_dir)
+        
+        # Evaluate public score (first 60 files)
+        score_pb, details = scorer.evaluate_task1(target_dir, public=True)
+        # Evaluate private score (all 300 files)
+        score_pr, _ = scorer.evaluate_task1(target_dir, public=False)
         
     except Exception as e:
         shutil.rmtree(temp_dir, ignore_errors=True)
@@ -79,8 +75,8 @@ async def submit_task1(file: UploadFile = File(...), db: Session = Depends(datab
         team_id=current_team.id,
         task_id=1,
         filename=file.filename,
-        public_score=score,
-        private_score=score, # Same for now
+        public_score=score_pb,
+        private_score=score_pr,
         details=json.dumps(details)
     )
     db.add(sub)
