@@ -45,6 +45,7 @@ export const adminAPI = {
   createTeam: (name: string, password: string) =>
     api.post('/admin/teams', { name, password }),
   deleteTeam: (teamId: number) => api.delete(`/admin/teams/${teamId}`),
+  deleteAllTeams: () => api.delete('/admin/teams/all/non-admin'),
   batchCreateTeams: (file: File) => {
     const formData = new FormData();
     formData.append('file', file);
@@ -58,6 +59,7 @@ export const adminAPI = {
   getLeaderboardSettings: () => api.get('/admin/settings/leaderboard'),
   updateLeaderboardSettings: (showPrivate: boolean) =>
     api.post(`/admin/settings/leaderboard?show_private=${showPrivate}`),
+  calculatePrivateLeaderboard: () => api.post('/admin/calculate-private-leaderboard'),
 };
 
 // QA API

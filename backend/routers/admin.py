@@ -2,11 +2,23 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 from typing import List
 from .. import models, schemas, database, utils
+import requests
+import os
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
+GPU_SERVER_URL = 'https://revolution-imports-thereof-accountability.trycloudflare.com'
+GPU_SCORER_SECRET_KEY = os.getenv('GPU_SCORER_SECRET_KEY')
+
 @router.post("/teams", response_model=schemas.Team)
 def create_team(team: schemas.TeamCreate, db: Session = Depends(database.get_db), current_admin: models.Team = Depends(utils.get_current_admin)):
+    # Check if trying to create an admin user
+    if hasattr(team, 'is_admin') and team.is_admin:
+        # Check if an admin already exists
+        existing_admin = db.query(models.Team).filter(models.Team.is_admin == True).first()
+        if existing_admin:
+            raise HTTPException(status_code=403, detail="An admin already exists. Only one admin allowed.")
+    
     db_team = db.query(models.Team).filter(models.Team.name == team.name).first()
     if db_team:
         raise HTTPException(status_code=400, detail="Team already registered")
@@ -34,6 +46,10 @@ def delete_team(
     if not team:
         raise HTTPException(status_code=404, detail="Team not found")
     
+    # Prevent deleting the admin
+    if team.is_admin:
+        raise HTTPException(status_code=403, detail="Cannot delete admin account")
+    
     # Delete all submissions first
     db.query(models.Submission).filter(models.Submission.team_id == team_id).delete()
     
@@ -41,6 +57,30 @@ def delete_team(
     db.delete(team)
     db.commit()
     return {"message": f"Team {team.name} and all submissions deleted"}
+
+@router.delete("/teams/all/non-admin")
+def delete_all_non_admin_teams(
+    db: Session = Depends(database.get_db),
+    current_admin: models.Team = Depends(utils.get_current_admin)
+):
+    """Delete all non-admin teams and their submissions (admin only)"""
+    # Get all non-admin teams
+    non_admin_teams = db.query(models.Team).filter(models.Team.is_admin == False).all()
+    team_count = len(non_admin_teams)
+    
+    # Delete all submissions for non-admin teams
+    non_admin_ids = [team.id for team in non_admin_teams]
+    submission_count = db.query(models.Submission).filter(models.Submission.team_id.in_(non_admin_ids)).delete(synchronize_session=False)
+    
+    # Delete all non-admin teams
+    db.query(models.Team).filter(models.Team.is_admin == False).delete(synchronize_session=False)
+    
+    db.commit()
+    return {
+        "message": "All non-admin teams deleted",
+        "teams_deleted": team_count,
+        "submissions_deleted": submission_count
+    }
 
 @router.post("/teams/batch")
 async def create_teams_batch(
@@ -56,9 +96,10 @@ async def create_teams_batch(
     team2,password456
     
     Logic:
-    - If team doesn't exist: create it
+    - If team doesn't exist: create it (as non-admin)
     - If team exists with different password: update password
     - If team exists with same password: skip (no change needed)
+    - Admin users cannot be created via batch upload
     """
     import csv
     import io
@@ -169,7 +210,7 @@ def update_leaderboard_settings(
     """Toggle private score visibility (admin only)"""
     settings = db.query(models.LeaderboardSettings).first()
     if not settings:
-        settings = models.LeaderboardSettings(show_private_scores=show_private) 
+        settings = models.LeaderboardSettings(show_private_scores=show_private)
         db.add(settings)
     else:
         settings.show_private_scores = show_private
@@ -177,3 +218,42 @@ def update_leaderboard_settings(
     db.commit()
     db.refresh(settings)
     return settings
+
+@router.post("/calculate-private-leaderboard")
+def calculate_private_leaderboard(
+    db: Session = Depends(database.get_db),
+    current_admin: models.Team = Depends(utils.get_current_admin)
+):
+    """
+    Trigger private leaderboard calculation on GPU server (admin only)
+    This will evaluate all teams' best models on the private test set
+    Note: This bypasses submission limi ts
+    """
+    if not GPU_SCORER_SECRET_KEY:
+        raise HTTPException(status_code=500, detail="GPU_SCORER_SECRET_KEY not configured")
+    
+    try:
+        response = requests.post(
+            f"{GPU_SERVER_URL}/submit/calculate-private-leaderboard",
+            headers={"X-GPU-Secret": GPU_SCORER_SECRET_KEY},
+            timeout=30.0
+        )
+        
+        if response.status_code != 200:
+            raise HTTPException(
+                status_code=response.status_code,
+                detail=f"GPU server error: {response.text}"
+            )
+        
+        return response.json()
+        
+    except requests.RequestException as e:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Failed to connect to GPU server: {str(e)}"
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error triggering private leaderboard calculation: {str(e)}"
+        )

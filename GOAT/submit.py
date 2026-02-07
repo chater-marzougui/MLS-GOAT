@@ -155,7 +155,7 @@ def challenge1(folder_path, team_id, password):
         return None
 
 
-def challenge2(model_path, team_id, password, batch_size=8, wait_for_result=True):
+def challenge2(model_path, team_id, password, wait_for_result=True):
     """
     Submit Task 2 (ONNX Model) for evaluation on GPU server
     
@@ -163,7 +163,6 @@ def challenge2(model_path, team_id, password, batch_size=8, wait_for_result=True
         model_path: Path to .onnx model file
         team_id: Your team name/ID
         password: Your team password
-        batch_size: Batch size for inference (1-32, default: 8)
         wait_for_result: Whether to wait and poll for results (default: True)
     
     Returns:
@@ -177,9 +176,6 @@ def challenge2(model_path, team_id, password, batch_size=8, wait_for_result=True
     
     if not model_path.endswith('.onnx'):
         raise ValueError("Invalid file type. Must be .onnx file")
-    
-    if not (1 <= batch_size <= 32):
-        raise ValueError(f"Batch size must be between 1 and 32 (provided: {batch_size})")
     
     file_size_mb = os.path.getsize(model_path) / (1024 * 1024)
     print(f"📦 Model size: {file_size_mb:.2f} MB")
@@ -195,18 +191,16 @@ def challenge2(model_path, team_id, password, batch_size=8, wait_for_result=True
         raise Exception(f"Authentication failed: {e}")
     
     # ---------- Get GPU Server URL ----------
-    print("🔍 Locating GPU server...")
     try:
         response = requests.get(f"{CPU_API_URL}/gpu-server-ip", timeout=10)
         if response.status_code != 200:
             raise Exception(f"Failed to get GPU server IP: {response.text}")
         GPU_API_URL = response.json()["gpu_server_ip"]
-        print(f"📡 GPU Server: {GPU_API_URL}")
     except Exception as e:
         raise Exception(f"Failed to locate GPU server: {e}")
 
     # ---------- Upload to GPU Server ----------
-    print("⬆️  Uploading model to GPU server...")
+    print("⬆️  Uploading model to server...")
 
     class ProgressFileWrapper:
         def __init__(self, filepath, mode='rb'):
@@ -239,12 +233,10 @@ def challenge2(model_path, team_id, password, batch_size=8, wait_for_result=True
     try:
         wrapped_file = ProgressFileWrapper(model_path)
         files = {'file': (os.path.basename(model_path), wrapped_file, 'application/octet-stream')}
-        data = {'team_token': token, 'batch_size': batch_size}
-        
         resp = requests.post(
             f"{GPU_API_URL}/submit/task2",
             files=files,
-            data=data,
+            data={'team_token': token},
             timeout=60
         )
         wrapped_file.close()
@@ -263,7 +255,6 @@ def challenge2(model_path, team_id, password, batch_size=8, wait_for_result=True
     print(f"\n✅ Submission Queued Successfully!")
     print(f"🆔 Submission ID: {submission_id}")
     print(f"📊 Queue Position: {queue_position}")
-    print(f"⚙️  Batch Size: {batch_size}")
     
     # ---------- Wait for Results or Exit ----------
     if not wait_for_result:
@@ -347,7 +338,7 @@ def _poll_for_results(gpu_url, submission_id, team_id, max_wait_minutes=15):
                             except:
                                 pass
                             
-                            print(f"\n✅ View full leaderboard at: {CPU_API_URL.replace('/api', '')}/leaderboard")
+                            print(f"\n✅ View full leaderboard at: {CPU_API_URL.replace('/api', '')}/")
                             return data
                         
                         elif status == 'failed':
@@ -375,13 +366,13 @@ def _poll_for_results(gpu_url, submission_id, team_id, max_wait_minutes=15):
             # Timeout
             print(f"\n\n⏱️  Polling timeout after {max_wait_minutes} minutes")
             print(f"💡 Your submission is still processing. Check the leaderboard later:")
-            print(f"   {CPU_API_URL.replace('/api', '')}/leaderboard")
+            print(f"   {CPU_API_URL.replace('/api', '')}/")
             return {'status': 'timeout', 'submission_id': submission_id}
     
     except KeyboardInterrupt:
         print(f"\n\n⚠️  Polling interrupted by user")
         print(f"💡 Your submission is still processing. Check the leaderboard later:")
-        print(f"   {CPU_API_URL.replace('/api', '')}/leaderboard")
+        print(f"   {CPU_API_URL.replace('/api', '')}/")
         print(f"   Or check status with submission ID: {submission_id}")
         return {'status': 'interrupted', 'submission_id': submission_id}
 

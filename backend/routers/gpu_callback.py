@@ -77,6 +77,7 @@ async def receive_result(
     status = data['status']
     score = data.get('score', 0)
     details = data.get('details', {})
+    is_private = data.get('is_private', False)
     
     # Find submission by team_id and recent timestamp
     # (since we don't store submission_id in DB initially)
@@ -90,8 +91,10 @@ async def receive_result(
     
     # Update with results
     if status == 'completed':
-        submission.public_score = score
-        submission.private_score = score
+        if is_private:
+            submission.private_score = score
+        else:
+            submission.public_score = score
         submission.details = json.dumps({
             "status": "completed",
             "submission_id": submission_id,

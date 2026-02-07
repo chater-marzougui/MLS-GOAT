@@ -64,12 +64,12 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ taskId }) => {
                     <tr className="border-b" style={{ borderColor: 'var(--border)' }}>
                         <th className="text-left p-4 font-semibold" style={{ color: 'var(--muted-foreground)' }}>Rank</th>
                         <th className="text-left p-4 font-semibold" style={{ color: 'var(--muted-foreground)' }}>Team</th>
-                        <th className="text-right p-4 font-semibold" style={{ color: 'var(--muted-foreground)' }}>
-                            Public Score {taskId === 1 ? '(dB)' : ''}
+                        <th className="text-right p-4 font-semibold" style={{ color: 'var(--muted-foreground)' }}>  
+                            Public Score {taskId === 1 ? '' : ''}
                         </th>
                         {showPrivate && (
                             <th className="text-right p-4 font-semibold" style={{ color: 'var(--muted-foreground)' }}>
-                                Private Score {taskId === 1 ? '(dB)' : ''}
+                                Private Score {taskId === 1 ? '' : ''}
                             </th>
                         )}
                     </tr>

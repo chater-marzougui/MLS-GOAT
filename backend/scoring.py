@@ -44,7 +44,7 @@ class Scorer:
         return sam_deg.item()
 
     def aggregate_score(self, psnr, ssim, sam):
-        out = (0.5*psnr / 50 + 0.25*ssim + 0.25*(1 - sam / 90))
+        out = (0.7*psnr / 50 + 0.15*ssim + 0.15*(1 - sam / 90))
         return 1.0 if out >= 0.999 else out
 
     def evaluate_task1(self, pred_dir, public=True):

@@ -122,6 +122,28 @@ const ManageTeams: React.FC<ManageTeamsProps> = ({ teams, fetchSubmissions, fetc
         }
     };
 
+    const handleDeleteAllTeams = async () => {
+        if (!confirm('⚠️ WARNING: This will delete ALL non-admin teams and their submissions!\n\nAre you absolutely sure?')) {
+            return;
+        }
+
+        // Second confirmation
+        const confirmText = prompt('Type "DELETE ALL" to confirm this action:');
+        if (confirmText !== 'DELETE ALL') {
+            alert('Deletion cancelled. Text did not match.');
+            return;
+        }
+
+        try {
+            const response = await adminAPI.deleteAllTeams();
+            alert(`✅ Deleted ${response.data.teams_deleted} teams and ${response.data.submissions_deleted} submissions`);
+            fetchTeams();
+            fetchSubmissions();
+        } catch (error: any) {
+            alert(error.response?.data?.detail || 'Failed to delete teams');
+        }
+    };
+
     return (
         <div className="max-w-7xl mx-auto px-4 py-8 space-y-6">
 
@@ -309,9 +331,22 @@ const ManageTeams: React.FC<ManageTeamsProps> = ({ teams, fetchSubmissions, fetc
                     borderColor: 'var(--border)',
                 }}
             >
-                <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--primary)' }}>
-                    Teams ({teams.length})
-                </h2>
+                <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-bold" style={{ color: 'var(--primary)' }}>
+                        Teams ({teams.length})
+                    </h2>
+                    <button
+                        onClick={handleDeleteAllTeams}
+                        className="px-4 py-2 rounded-md font-semibold transition-all hover:opacity-80"
+                        style={{
+                            backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                            color: '#EF4444',
+                            border: '1px solid #EF4444',
+                        }}
+                    >
+                        🗑️ Delete All Teams
+                    </button>
+                </div>
                 <div className="overflow-x-auto">
                     <table className="w-full">
                         <thead>
