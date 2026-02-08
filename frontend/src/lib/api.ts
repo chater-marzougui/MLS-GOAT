@@ -36,6 +36,7 @@ export const teamsAPI = {
 export const leaderboardAPI = {
   getTask1: () => api.get('/leaderboard/task1'),
   getTask2: () => api.get('/leaderboard/task2'),
+  getCombined: () => api.get('/leaderboard/combined'),
   getSettings: () => api.get('/leaderboard/settings'),
 };
 
@@ -60,6 +61,8 @@ export const adminAPI = {
   updateLeaderboardSettings: (showPrivate: boolean) =>
     api.post(`/admin/settings/leaderboard?show_private=${showPrivate}`),
   calculatePrivateLeaderboard: () => api.post('/admin/calculate-private-leaderboard'),
+  changePassword: (oldPassword: string, newPassword: string) =>
+    api.post(`/admin/change-password?old_password=${encodeURIComponent(oldPassword)}&new_password=${encodeURIComponent(newPassword)}`),
 };
 
 // QA API

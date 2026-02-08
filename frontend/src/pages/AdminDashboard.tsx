@@ -6,6 +6,7 @@ import type { Team, Submission } from '../lib/types';
 import ManageTeams from '../components/ManageTeams';
 import SubmissionsList from '../components/SubmissionsList';
 import AdminSettings from '../components/AdminSettings';
+import ThemeToggle from '../components/ThemeToggle';
 import QASection from '../components/QASection';
 
 const AdminDashboard: React.FC = () => {
@@ -74,6 +75,7 @@ const AdminDashboard: React.FC = () => {
                         <span style={{ color: 'var(--foreground)' }}>
                             <strong>{user?.name}</strong> (Admin)
                         </span>
+                        <ThemeToggle />
                         <button
                             onClick={handleLogout}
                             className="px-4 py-2 rounded-md transition-all hover:opacity-80"

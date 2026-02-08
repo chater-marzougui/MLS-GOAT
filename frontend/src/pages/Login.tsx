@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../lib/auth';
 import { useNavigate } from 'react-router-dom';
+import ThemeToggle from '../components/ThemeToggle';
 
 const Login: React.FC = () => {
     const [name, setName] = useState('');
@@ -27,6 +28,9 @@ const Login: React.FC = () => {
 
     return (
         <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: 'var(--background)' }}>
+            <div className="absolute top-4 right-4">
+                <ThemeToggle />
+            </div>
             <div className="w-full max-w-md">
                 {/* Logo Section */}
                 <div className="text-center mb-8">

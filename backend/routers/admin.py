@@ -31,7 +31,7 @@ def create_team(team: schemas.TeamCreate, db: Session = Depends(database.get_db)
     return new_team
 
 @router.get("/teams", response_model=List[schemas.Team])
-def read_teams(skip: int = 0, limit: int = 100, db: Session = Depends(database.get_db), current_admin: models.Team = Depends(utils.get_current_admin)):
+def read_teams(skip: int = 0, limit: int = 300, db: Session = Depends(database.get_db), current_admin: models.Team = Depends(utils.get_current_admin)):
     teams = db.query(models.Team).offset(skip).limit(limit).all()
     return teams
 
@@ -162,7 +162,7 @@ async def create_teams_batch(
 @router.get("/submissions", response_model=List[schemas.SubmissionResult])
 def get_all_submissions(
     skip: int = 0, 
-    limit: int = 100,
+    limit: int = 300,
     db: Session = Depends(database.get_db),
     current_admin: models.Team = Depends(utils.get_current_admin)
 ):
@@ -227,7 +227,7 @@ def calculate_private_leaderboard(
     """
     Trigger private leaderboard calculation on GPU server (admin only)
     This will evaluate all teams' best models on the private test set
-    Note: This bypasses submission limi ts
+    Note: This bypasses submission limits
     """
     if not GPU_SCORER_SECRET_KEY:
         raise HTTPException(status_code=500, detail="GPU_SCORER_SECRET_KEY not configured")
@@ -257,3 +257,31 @@ def calculate_private_leaderboard(
             status_code=500,
             detail=f"Error triggering private leaderboard calculation: {str(e)}"
         )
+
+@router.post("/change-password")
+def change_admin_password(
+    old_password: str,
+    new_password: str,
+    db: Session = Depends(database.get_db),
+    current_admin: models.Team = Depends(utils.get_current_admin)
+):
+    """
+    Change admin password (admin only)
+    Requires old password for verification
+    """
+    # Verify old password
+    if not utils.verify_password(old_password, current_admin.password_hash):
+        raise HTTPException(status_code=401, detail="Old password is incorrect")
+    
+    # Validate new password
+    if len(new_password) < 6:
+        raise HTTPException(status_code=400, detail="New password must be at least 6 characters long")
+    
+    if old_password == new_password:
+        raise HTTPException(status_code=400, detail="New password must be different from old password")
+    
+    # Update password
+    current_admin.password_hash = utils.get_password_hash(new_password)
+    db.commit()
+    
+    return {"message": "Password changed successfully"}

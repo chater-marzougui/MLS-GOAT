@@ -1,7 +1,6 @@
 data
 *.db
 *.onnx
-test*
 __pycache__
 temp/
 .env

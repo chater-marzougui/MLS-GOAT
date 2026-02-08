@@ -1,0 +1,100 @@
+version: '3.8'
+
+services:
+  # Main backend - handles uploads and job distribution
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - ./backend/data:/app/data
+      - evaluation_queue:/app/queue
+      - evaluation_results:/app/results
+    environment:
+      - REDIS_HOST=redis
+      - WORKER_COUNT=1
+      - BATCH_SIZE=8
+      - CPU_SERVER_URL=https://mls-goat.eastus2.cloudapp.azure.com
+      - GPU_SCORER_SECRET_KEY=MLSGOAT2026SCORERSECRETKEYVER1
+    depends_on:
+      - redis
+    networks:
+      - hackathon-net
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+
+  # Redis for job queue
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - hackathon-net
+    volumes:
+      - redis_data:/data
+
+  # NVIDIA MPS for efficient GPU sharing across workers
+  nvidia-mps:
+    image: nvidia/cuda:11.8.0-base-ubuntu22.04
+    command: sh -c "nvidia-cuda-mps-control -d && tail -f /dev/null"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['0']
+              capabilities: [gpu]
+    privileged: true
+    networks:
+      - hackathon-net
+    restart: unless-stopped
+
+  # Worker instance with GPU
+  worker-1:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.worker
+    environment:
+      - REDIS_HOST=redis
+      - WORKER_ID=1
+      - GPU_MEMORY_FRACTION=0.8
+      - CUDA_VISIBLE_DEVICES=0
+      - BATCH_SIZE=8
+      - CPU_SERVER_URL=https://mls-goat.eastus2.cloudapp.azure.com
+      - GPU_SCORER_SECRET_KEY=MLSGOAT2026SCORERSECRETKEYVER1
+    volumes:
+      - evaluation_queue:/app/queue
+      - evaluation_results:/app/results
+      - ./backend/data:/app/data
+      - ./backend/worker.py:/app/worker.py
+      - ./backend/app:/app/app
+    depends_on:
+      - redis
+      - nvidia-mps
+    networks:
+      - hackathon-net
+    deploy:
+      resources:
+        limits:
+          cpus: '3.0'
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['0']
+              capabilities: [gpu]
+    restart: unless-stopped
+
+
+volumes:
+  evaluation_queue:
+  evaluation_results:
+  redis_data:
+
+networks:
+  hackathon-net:
+    driver: bridge

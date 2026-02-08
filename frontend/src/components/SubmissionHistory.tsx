@@ -7,6 +7,7 @@ const SubmissionHistory: React.FC = () => {
     const [selectedTask, setSelectedTask] = useState<number | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [showPrivate, setShowPrivate] = useState(false);
+    const [selectedDetails, setSelectedDetails] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchSubmissions = async () => {
@@ -32,6 +33,37 @@ const SubmissionHistory: React.FC = () => {
 
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleString();
+    };
+
+    const formatDetails = (details: string) => {
+        try {
+            const parsed = JSON.parse(details);
+            return Object.entries(parsed)
+                .map(([key, value]) => {
+                    if (typeof value === 'number') {
+                        return `${key}: ${typeof value === 'number' && value < 1 ? value.toFixed(8) : value}`;
+                    }
+                    return `${key}: ${value}`;
+                })
+                .join('\n');
+        } catch {
+            return details;
+        }
+    };
+
+    const getDetailsPreview = (details: string) => {
+        try {
+            const parsed = JSON.parse(details);
+            if (parsed.status) {
+                return `Status: ${parsed.status}`;
+            }
+            if (parsed.score !== undefined) {
+                return `Score: ${parsed.score.toFixed(4)}`;
+            }
+            return 'View details';
+        } catch {
+            return 'View details';
+        }
     };
 
     if (isLoading) {
@@ -123,8 +155,17 @@ const SubmissionHistory: React.FC = () => {
                                     <td className="p-4 text-right font-mono" style={{ color: 'var(--primary)' }}>
                                         {sub.public_score.toFixed(8)}
                                     </td>
-                                    <td className="p-4 text-xs max-w-xs truncate" style={{ color: 'var(--muted-foreground)' }} title={sub.details}>
-                                        {sub.details}
+                                    <td className="p-4 text-xs" style={{ color: 'var(--muted-foreground)' }}>
+                                        <button
+                                            onClick={() => setSelectedDetails(sub.details)}
+                                            className="px-3 py-1 rounded text-xs font-medium transition-all hover:opacity-80 underline decoration-dotted"
+                                            style={{
+                                                backgroundColor: 'rgba(17, 197, 232, 0.1)',
+                                                color: 'var(--primary)',
+                                            }}
+                                        >
+                                            {getDetailsPreview(sub.details)}
+                                        </button>
                                     </td>
                                     {showPrivate && (
                                         <td className="p-4 text-right font-mono" style={{ color: 'var(--accent)' }}>
@@ -140,6 +181,49 @@ const SubmissionHistory: React.FC = () => {
                     </tbody>
                 </table>
             </div>
+
+            {/* Details Modal */}
+            {selectedDetails && (
+                <div
+                    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+                    onClick={() => setSelectedDetails(null)}
+                >
+                    <div
+                        className="rounded-lg border p-6 max-w-2xl max-h-[80vh] overflow-auto"
+                        style={{
+                            backgroundColor: 'var(--card)',
+                            borderColor: 'var(--border)',
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-bold" style={{ color: 'var(--primary)' }}>
+                                Submission Details
+                            </h3>
+                            <button
+                                onClick={() => setSelectedDetails(null)}
+                                className="px-3 py-1 rounded text-sm font-medium transition-all hover:opacity-80"
+                                style={{
+                                    backgroundColor: 'var(--muted)',
+                                    color: 'var(--foreground)',
+                                }}
+                            >
+                                ✕ Close
+                            </button>
+                        </div>
+                        <pre
+                            className="p-4 rounded text-sm whitespace-pre-wrap break-words"
+                            style={{
+                                backgroundColor: 'var(--background)',
+                                color: 'var(--foreground)',
+                                border: '1px solid var(--border)',
+                            }}
+                        >
+                            {formatDetails(selectedDetails)}
+                        </pre>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

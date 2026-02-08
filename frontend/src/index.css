@@ -40,7 +40,11 @@
   --deep-space: #000625;
   --neural-navy: #102433;
   --stark-white: #E0E1E5;
+}
 
+/* Dark Mode (default) */
+:root,
+:root.dark {
   /* Semantic mappings */
   --background: var(--deep-space);
   --foreground: var(--stark-white);
@@ -60,6 +64,28 @@
   --border: rgba(17, 197, 232, 0.2);
   --input: rgba(17, 197, 232, 0.1);
   --ring: var(--electric-cyan);
+}
+
+/* Light Mode */
+:root.light {
+  --background: #FFFFFF;
+  --foreground: #0F172A;
+  --card: #F8FAFC;
+  --card-foreground: #0F172A;
+  --popover: #FFFFFF;
+  --popover-foreground: #0F172A;
+  --primary: #0EA5E9;
+  --primary-foreground: #FFFFFF;
+  --secondary: #E2E8F0;
+  --secondary-foreground: #0F172A;
+  --muted: #F1F5F9;
+  --muted-foreground: #64748B;
+  --accent: #7C3AED;
+  --accent-foreground: #FFFFFF;
+  --destructive: #EF4444;
+  --border: #E2E8F0;
+  --input: #E2E8F0;
+  --ring: #0EA5E9;
 }
 
 @layer base {

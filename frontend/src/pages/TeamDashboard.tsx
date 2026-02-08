@@ -2,15 +2,16 @@ import React, { useState } from 'react';
 import { useAuth } from '../lib/auth';
 import { useNavigate } from 'react-router-dom';
 import Leaderboard from '../components/Leaderboard';
+import CombinedLeaderboard from '../components/CombinedLeaderboard';
 import SubmissionHistory from '../components/SubmissionHistory';
-
+import ThemeToggle from '../components/ThemeToggle';
 import QASection from '../components/QASection';
 
 const TeamDashboard: React.FC = () => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState<'leaderboard' | 'submissions' | 'qa'>('leaderboard');
-    const [activeTask, setActiveTask] = useState<1 | 2>(1);
+    const [activeTask, setActiveTask] = useState<1 | 2 | 'combined'>(1);
 
     const handleLogout = () => {
         logout();
@@ -43,6 +44,7 @@ const TeamDashboard: React.FC = () => {
                         <span style={{ color: 'var(--foreground)' }}>
                             Welcome, <strong>{user?.name}</strong>
                         </span>
+                        <ThemeToggle />
                         <button
                             onClick={handleLogout}
                             className="px-4 py-2 rounded-md transition-all hover:opacity-80"
@@ -106,6 +108,17 @@ const TeamDashboard: React.FC = () => {
                             {/* Task Selector */}
                             <div className="flex gap-2 mb-6">
                                 <button
+                                    onClick={() => setActiveTask('combined')}
+                                    className="px-4 py-2 rounded-md font-medium transition-all"
+                                    style={{
+                                        backgroundColor: activeTask === 'combined' ? 'var(--electric-cyan)' : 'transparent',
+                                        color: activeTask === 'combined' ? 'var(--background)' : 'var(--foreground)',
+                                        border: `1px solid ${activeTask === 'combined' ? 'var(--electric-cyan)' : 'var(--border)'}`,
+                                    }}
+                                >
+                                    🏆 Combined Leaderboard
+                                </button>
+                                <button
                                     onClick={() => setActiveTask(1)}
                                     className="px-4 py-2 rounded-md font-medium transition-all"
                                     style={{
@@ -128,7 +141,11 @@ const TeamDashboard: React.FC = () => {
                                     Task 2: Model Optimization
                                 </button>
                             </div>
-                            <Leaderboard taskId={activeTask} />
+                            {activeTask === 'combined' ? (
+                                <CombinedLeaderboard />
+                            ) : (
+                                <Leaderboard taskId={activeTask} />
+                            )}
                         </>
                     )}
 

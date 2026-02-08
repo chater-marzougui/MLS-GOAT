@@ -19,6 +19,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7 # 1 week
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="token", auto_error=False)
 
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
@@ -69,3 +70,22 @@ def get_current_admin(current_team: models.Team = Depends(get_current_team)):
             status_code=403, detail="Admin privileges required"
         )
     return current_team
+
+def get_current_team_optional(token: Optional[str] = Depends(oauth2_scheme_optional), db: Session = Depends(database.get_db)) -> Optional[models.Team]:
+    """
+    Optional authentication - returns team if authenticated, None if not
+    Allows endpoints to be accessible without auth but provide extra features for authenticated users
+    """
+    if not token:
+        return None
+    
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        team_id: str = payload.get("sub")
+        if team_id is None:
+            return None
+        
+        team = db.query(models.Team).filter(models.Team.id == int(team_id)).first()
+        return team
+    except JWTError:
+        return None

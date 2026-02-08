@@ -43,6 +43,16 @@ class LeaderboardEntry(BaseModel):
     private_score: Optional[float] = None
     details: Optional[str] = None
 
+class CombinedLeaderboardEntry(BaseModel):
+    team_name: str
+    combined_score: float
+    task1_score: Optional[float] = None
+    task2_score: Optional[float] = None
+    rank: int
+    private_combined_score: Optional[float] = None
+    private_task1_score: Optional[float] = None
+    private_task2_score: Optional[float] = None
+
 class TeamInfo(BaseModel):
     id: int
     name: str

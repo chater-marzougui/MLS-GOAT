@@ -21,6 +21,17 @@ export interface LeaderboardEntry {
     private_score?: number;
 }
 
+export interface CombinedLeaderboardEntry {
+    team_name: string;
+    combined_score: number;
+    task1_score?: number;
+    task2_score?: number;
+    rank: number;
+    private_combined_score?: number;
+    private_task1_score?: number;
+    private_task2_score?: number;
+}
+
 export interface Answer {
     id: number;
     question_id: number;

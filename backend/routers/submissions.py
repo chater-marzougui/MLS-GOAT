@@ -18,8 +18,8 @@ GPU_SCORER_SECRET_KEY = os.getenv('GPU_SCORER_SECRET_KEY')
 # Ensure the scorer knows about GT
 scorer.gt_dir_task1 = GT_TASK1_DIR
 
-LIMIT_TASK1 = 20
-LIMIT_TASK2 = 30
+LIMIT_TASK1 = 30
+LIMIT_TASK2 = 40
 
 @router.post("/task1", response_model=schemas.SubmissionResult)
 async def submit_task1(file: UploadFile = File(...), db: Session = Depends(database.get_db), current_team: models.Team = Depends(utils.get_current_team)):

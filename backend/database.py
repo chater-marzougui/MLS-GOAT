@@ -10,8 +10,12 @@ engine = create_engine(
     SQLALCHEMY_DATABASE_URL,
     connect_args={
         "check_same_thread": False,
-        "timeout": 30  # increase timeout to 30 seconds
-    }
+        "timeout": 60  # increase timeout to 60 seconds
+    },
+    pool_size=20,  # Increase from default 5 to 20
+    max_overflow=40,  # Increase from default 10 to 40
+    pool_pre_ping=True,  # Verify connections before using them
+    pool_recycle=3600  # Recycle connections after 1 hour
 )
 
 # Enable WAL mode and normal synchronous for better concurrency

@@ -1,6 +1,7 @@
 ﻿import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './lib/auth';
+import { ThemeProvider } from './lib/theme';
 import Login from './pages/Login';
 import TeamDashboard from './pages/TeamDashboard';
 import AdminDashboard from './pages/AdminDashboard';
@@ -47,30 +48,32 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
 function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <TeamDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin"
-            element={
-              <AdminRoute>
-                <AdminDashboard />
-              </AdminRoute>
-            }
-          />
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
-      </AuthProvider>
-    </BrowserRouter>
+    <ThemeProvider>
+      <BrowserRouter>
+        <AuthProvider>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <TeamDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <AdminRoute>
+                  <AdminDashboard />
+                </AdminRoute>
+              }
+            />
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </AuthProvider>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
 

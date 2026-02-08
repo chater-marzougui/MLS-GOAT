@@ -1,0 +1,5 @@
+onnxruntime-gpu==1.17.1
+numpy==1.26.4
+redis==5.0.1
+Pillow==10.3.0
+requests==2.31.0
